@@ -1,16 +1,16 @@
 MiDaS_model_ckpt: Inpainting/MiDaS/model.pt
 anti_flickering: true
-background_thickness: 80
-background_thickness_2: 80
-context_thickness: 170
-context_thickness_2: 100
+background_thickness: 70
+background_thickness_2: 70
+context_thickness: 140
+context_thickness_2: 70
 crop_border:
 - 0.03
 - 0.03
 - 0.05
 - 0.03
-depth_edge_dilate: 14
-depth_edge_dilate_2: 9
+depth_edge_dilate: 10
+depth_edge_dilate_2: 5
 depth_edge_model_ckpt: Inpainting/checkpoints/edge-model.pth
 depth_feat_model_ckpt: Inpainting/checkpoints/depth-model.pth
 depth_folder: Output
@@ -19,7 +19,7 @@ depth_threshold: 0.04
 discount_factor: 1.0
 ext_edge_threshold: 0.002
 extrapolate_border: true
-extrapolation_thickness: 80
+extrapolation_thickness: 60
 filter_size:
 - 7
 - 7
@@ -45,21 +45,31 @@ save_ply: true
 sigma_r: 0.5
 sigma_s: 4.0
 sparse_iter: 5
-specific: f18716a28fb7476abc92d060aa4310bc
-src_folder: /media/l/depth/1
+specific: asdf
+src_folder: /tmp/depth/
 traj_types:
+- double-straight-line
+- double-straight-line
 - circle
 - circle
 video_folder: video
 video_postfix:
+- dolly-zoom-in
+- zoom-in
 - circle
 - swing
 x_shift_range:
+- 0.0
+- 0.0
 - -0.02
 - -0.02
 y_shift_range:
+- 0.0
+- 0.0
 - -0.02
 - -0.0
 z_shift_range:
-- -0.1
-- -0.1
+- -0.05
+- -0.05
+- -0.07
+- -0.07
