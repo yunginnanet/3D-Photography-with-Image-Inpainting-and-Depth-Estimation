@@ -135,6 +135,8 @@ def inpaint(file_name):
 
         mean_loc_depth = depth[depth.shape[0] // 2, depth.shape[1] // 2]
 
+        starty = time.time()
+
         if not (config["load_ply"] is True and os.path.exists(mesh_fi)):
             vis_photos, vis_depths = sparse_bilateral_filtering(
                 depth.copy(),
@@ -185,7 +187,7 @@ def inpaint(file_name):
                 f"Writing depth ply (and basically doing everything) at {time.time()}"
             )
             # do some mesh work
-            starty = time.time()
+            # starty = time.time()
             rt_info = write_ply(
                 image,
                 depth,
