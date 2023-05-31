@@ -159,7 +159,8 @@ async def run():
     # complete all the tasks in the task queue
     while not tasks.empty():
         proc_input = await tasks.get()
-        proc_input.final()
+        task = await proc_input.get()
+        task.final()
         tasks.task_done()
 
 

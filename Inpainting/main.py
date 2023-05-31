@@ -169,16 +169,21 @@ def process(
         interpolation=cv2.INTER_AREA,
     )
 
-    depth = read_MiDaS_depth(
-        sample["depth_fi"], 3.0, config["output_h"], config["output_w"]
-    )  # read normalized depth computed
+    try:
+        depth = read_MiDaS_depth(
+            sample["depth_fi"], 3.0, config["output_h"], config["output_w"]
+        )  # read normalized depth computed
+    except Exception as e:
+        print(f'Error during read_MiDaS_depth: {e}')
+        exit(1)
 
     mean_loc_depth = depth[depth.shape[0] // 2, depth.shape[1] // 2]
 
     # starty = time.time()
 
-    if not (config["load_ply"] is False or os.path.exists(mesh_fi) == False):
-        mesh(  # load ply file
+    if config["load_ply"] is True and os.path.exists(mesh_fi):
+        print(f'Loading ply for {config["specific"]} at {tnow()}')
+        make_vid(  # load ply file
             config,
             device,
             sample,
@@ -189,6 +194,7 @@ def process(
             normal_canvas,
             all_canvas,
         )
+        return
 
     vis_photos, vis_depths = sparse_bilateral_filtering(
         depth.copy(),
@@ -209,32 +215,35 @@ def process(
 
     # do some mesh work
     # starty = time.time()
-    rt_info = write_ply(
-        image,
-        depth,
-        sample["int_mtx"],
-        mesh_fi,
-        config,
-        rgb_model,
-        depth_edge_model,
-        depth_edge_model,
-        depth_feat_model,
-    )
-
-    if rt_info is False:
+    try:
+        rt_info = write_ply(
+            image,
+            depth,
+            sample["int_mtx"],
+            mesh_fi,
+            config,
+            rgb_model,
+            depth_edge_model,
+            depth_edge_model,
+            depth_feat_model,
+        )
+    except Exception as e:
+        print(f'Error during write_ply: {e}')
         return
+
+
 
     # rgb_model = None
     # color_feat_model = None
     # depth_edge_model = None
     # depth_feat_model = None
-    # torch.cuda.empty_cache()
+    torch.cuda.empty_cache()
+    print(f'Finished process for {config["specific"]} at {tnow()}')
     # print(f'Total Time taken for {config["specific"]}: {time.strftime("%M:%S", time.time() - starty)}')
+    make_vid(config, rt_info, mesh_fi, sample, image, depth, normal_canvas, all_canvas, mean_loc_depth)
 
-
-def mesh(config, rt_info, mesh_fi, sample, image, depth, normal_canvas, all_canvas, mean_loc_depth):
+def make_vid(config, rt_info, mesh_fi, sample, image, depth, normal_canvas, all_canvas, mean_loc_depth):
     print(f'Loading mesh for {config["specific"]} at {tnow()}')
-
     if config["save_ply"] is True or config["load_ply"] is True:
         verts, colors, faces, Height, Width, hFov, vFov = read_ply(
             mesh_fi
@@ -290,3 +299,6 @@ async def inpaint(config, device, model, rgb_model, depth_edge_model, depth_feat
     except Exception as e:
         print(f'FUBAR\'d: {e}')
         exit(1)
+
+
+
