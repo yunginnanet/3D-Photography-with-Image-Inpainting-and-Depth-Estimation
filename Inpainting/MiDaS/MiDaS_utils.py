@@ -174,6 +174,8 @@ def write_depth(path, depth, bits=1):
     """
     # write_pfm(path + ".pfm", depth.astype(np.float32))
 
+    print(f'writing depth to {path}')
+
     depth_min = depth.min()
     depth_max = depth.max()
 

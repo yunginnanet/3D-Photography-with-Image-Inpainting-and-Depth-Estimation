@@ -75,7 +75,7 @@ def inpaint(file_name):
     else:
         device = "0"
 
-    print(f"running on device {device}")
+    print(f"using {len(sample_list)} samples on device {device}")
 
     # iterate over each image.
     for idx in tqdm(range(len(sample_list))):

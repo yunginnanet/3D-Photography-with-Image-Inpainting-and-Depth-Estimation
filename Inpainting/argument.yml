@@ -45,8 +45,8 @@ save_ply: true
 sigma_r: 0.5
 sigma_s: 4.0
 sparse_iter: 5
-specific: f3213296936
-src_folder: /media/l/depth/
+specific: asdf
+src_folder: /tmp/depth/
 traj_types:
 - double-straight-line
 - double-straight-line

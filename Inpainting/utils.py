@@ -1367,10 +1367,14 @@ def get_MiDaS_samples(
     print(
         f"getting midas samples for image folder {image_folder}, depth folder {depth_folder}, specific (if any) {specific}"
     )
+
     lines = [
         os.path.splitext(os.path.basename(xx))[0]
-        for xx in glob.glob(os.path.join(image_folder, "*" + config["img_format"]))
+        for xx in os.listdir(image_folder)
     ]
+
+    print(f'{lines}')
+
     samples = []
     generic_pose = np.eye(4)
     assert (
