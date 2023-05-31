@@ -1,17 +1,16 @@
 """Compute depth maps for images in the input folder.
-""" 
+"""
 import os
-import glob
-import torch
+
+import cv2
 # from monodepth_net import MonoDepthNet
 # import utils
-import matplotlib.pyplot as plt
 import numpy as np
-import cv2
-import imageio
+import torch
 
 
-def run_depth(img_names, input_path, output_path, model_path, Net, utils, target_w=None):
+def run_depth(device, img_names, input_path, output_path, model, utils, target_w=None):
+
     """Run MonoDepthNN to compute depth maps.
 
     Args:
@@ -19,16 +18,7 @@ def run_depth(img_names, input_path, output_path, model_path, Net, utils, target
         output_path (str): path to output folder
         model_path (str): path to saved model
     """
-    print("initialize")
-
-    # select device
-    device = torch.device("cuda:0")
-    print("device: %s" % device)
-
-    # load network
-    model = Net(model_path)
-    model.to(device)
-    model.eval()
+    print("initialize depth for " + img_names[0])
 
     # get input
     # img_names = glob.glob(os.path.join(input_path, "*"))
@@ -37,11 +27,9 @@ def run_depth(img_names, input_path, output_path, model_path, Net, utils, target
     # create output folder
     os.makedirs(output_path, exist_ok=True)
 
-    print("start processing")
-
     for ind, img_name in enumerate(img_names):
-
-        print("  processing {} ({}/{})".format(img_name, ind + 1, num_images))
+        if len(img_names) > 1:
+            print("  processing {} ({}/{})".format(img_name, ind + 1, num_images))
 
         # input
         img = utils.read_image(img_name)
@@ -54,7 +42,7 @@ def run_depth(img_names, input_path, output_path, model_path, Net, utils, target
         # compute
         with torch.no_grad():
             out = model.forward(img_input)
-        
+
         depth = utils.resize_depth(out, target_width, target_height)
         img = cv2.resize((img * 255).astype(np.uint8), (target_width, target_height), interpolation=cv2.INTER_AREA)
 
@@ -64,8 +52,7 @@ def run_depth(img_names, input_path, output_path, model_path, Net, utils, target
         np.save(filename + '.npy', depth)
         utils.write_depth(filename, depth, bits=2)
 
-    print("finished")
-
+    print("finished depth for " + img_names[0])
 
 # if __name__ == "__main__":
 #     # set paths
