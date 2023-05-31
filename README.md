@@ -1,6 +1,14 @@
 # 3D-Photography: Image Inpainting | Depth-Estimation
 <p>Sensing Depth from 2D Images and Inpainting Background behind the Foreground objects to create 3D Photos with Parallax Animation.</p>
 
+
+### it may even work now
+you can get real cheeky and try to get this to work in 2023, i had success with 3.10 venv after my modifications, check `getmodels.sh` as well
+#### example
+`python3 3dphotography.py /path/to/images`
+
+##### you're welcome, from yung innanet
+
 ---
 
 ## Depth Estimation by Tiefenrausch	and PyDNet respectively.
