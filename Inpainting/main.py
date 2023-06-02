@@ -62,6 +62,7 @@ class proc_input:
 
 
 async def magic(config, device, model, rgb_model, depth_edge_model, depth_feat_model):
+    print(f'Running magic for {config["specific"]} in {config["src_folder"]} at {tnow()}')
     sample_list = get_MiDaS_samples(
         config["src_folder"], config["depth_folder"], config, config["specific"]
     )  # dict of important stuffs
@@ -116,7 +117,7 @@ async def magic(config, device, model, rgb_model, depth_edge_model, depth_feat_m
         )
 
     # run all depth extractions
-    await asyncio.gather(*[worker(task_queue) for _ in range(5)])
+    await asyncio.gather(*[worker(task_queue) for _ in range(task_queue.qsize())])
 
     # wait for all depth extractions to finish
     await task_queue.join()

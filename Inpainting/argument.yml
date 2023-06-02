@@ -31,7 +31,7 @@ gpu_ids: 0
 img_format: .jpg
 inference_video: true
 largest_size: 512
-load_ply: false
+load_ply: true
 log_depth: true
 longer_side_len: 1280
 mesh_folder: mesh

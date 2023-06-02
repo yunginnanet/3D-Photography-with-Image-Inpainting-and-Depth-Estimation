@@ -1,7 +1,9 @@
 import asyncio
 import os
 import sys
+import time
 
+import aiofiles
 import torch
 import yaml
 
@@ -22,20 +24,22 @@ global rgb_model_ckpt
 global rgb_model
 
 
-def setup_new_arg_file(file_name):
+async def setup_new_arg_file(file_name):
     if not os.path.exists("Inpainting/tmp"):
         os.mkdir("Inpainting/tmp")
     # copy Inpainting/argument.yml to Inpainting/{file_name}.yml and then use the new file as argtarget value
     # this is to make sure that each image is inpainted with its own argument.yml file
-    argtarget = f'Inpainting/tmp/{file_name}.yml'
+
+    argtarget = f"Inpainting/tmp/{file_name}.yml"
     if not os.path.exists(argtarget):
         print(f"copying argument.yml to {argtarget}...")
-        with open("Inpainting/argument.yml") as f:
-            with open(argtarget, "w") as f1:
-                for line in f:
-                    f1.write(line)
+        async with aiofiles.open("Inpainting/argument.yml") as f:
+            async with aiofiles.open(argtarget, "w") as f1:
+                async for line in f:
+                    await f1.write(line)
     else:
         print(f"{argtarget} already exists. using it...")
+
     return argtarget
 
 
@@ -99,21 +103,19 @@ def get_device_and_model(gpu_ids, model_path, nnet):
     # set gpu ids
     deviceStr = "cuda:0"
 
-    print(f'using device {deviceStr}')
+    print(f"using device {deviceStr}")
 
     # select device
     device = torch.device(deviceStr)
     # print("device: %s" % device)
 
-    print('Loading model from {}...'.format(model_path))
+    print("Loading model from {}...".format(model_path))
 
     # load network
     model = nnet(model_path)
     model.to(device)
     model.eval()
-    depth_edge_model = Inpaint_Edge_Net(
-        init_weights=True
-    )  # init edge inpainting model
+    depth_edge_model = Inpaint_Edge_Net(init_weights=True)  # init edge inpainting model
     depth_edge_weight = torch.load(
         depth_edge_model_ckpt, map_location="cuda:" + str(gpu_ids[0])
     )
@@ -121,7 +123,7 @@ def get_device_and_model(gpu_ids, model_path, nnet):
     depth_edge_model = depth_edge_model.to(deviceStr)
     depth_edge_model.eval()  # in eval mode
 
-    print(f'Loading depth model from {depth_feat_model_ckpt}')
+    print(f"Loading depth model from {depth_feat_model_ckpt}")
     depth_feat_model = Inpaint_Depth_Net()  # init depth inpainting model
     depth_feat_weight = torch.load(
         depth_feat_model_ckpt, map_location=torch.device(deviceStr)
@@ -131,11 +133,9 @@ def get_device_and_model(gpu_ids, model_path, nnet):
     depth_feat_model.eval()
     depth_feat_model = depth_feat_model.to(deviceStr)
 
-    print(f'Loading rgb model from {rgb_model_ckpt}')  # init color inpainting model
+    print(f"Loading rgb model from {rgb_model_ckpt}")  # init color inpainting model
     rgb_model = Inpaint_Color_Net()
-    rgb_feat_weight = torch.load(
-        rgb_model_ckpt, map_location=torch.device(deviceStr)
-    )
+    rgb_feat_weight = torch.load(rgb_model_ckpt, map_location=torch.device(deviceStr))
     rgb_model.load_state_dict(rgb_feat_weight)
     rgb_model.eval()
     rgb_model = rgb_model.to(deviceStr)
@@ -144,18 +144,20 @@ def get_device_and_model(gpu_ids, model_path, nnet):
 
 async def run():
     get_device_and_model([0], "Inpainting/MiDaS/model.pt", MonoDepthNet)
-    sem = asyncio.Semaphore(5)
     # create task queue
     tasks = asyncio.Queue()
     # collect all the tasks from concurrent_inpaint into a big task queue to be executed at the end
     for file_name in os.listdir(sys.argv[1]):
-        async with sem:
-            print(f'inpainting started for {file_name}')
-            argtarget = setup_new_arg_file(file_name)
-            config = config_ops(argtarget, file_name)
-            create_dirs(config)
-            pi = await main.inpaint(config, deviceStr, model, rgb_model, depth_edge_model, depth_feat_model)
-            tasks.put_nowait(pi)
+        print(f"inpainting started for {file_name}")
+        argtarget = await setup_new_arg_file(file_name)
+        config = config_ops(argtarget, file_name)
+        create_dirs(config)
+        pi = await main.inpaint(
+            config, deviceStr, model, rgb_model, depth_edge_model, depth_feat_model
+        )
+        #time.sleep(1)
+        tasks.put_nowait(pi)
+
     # complete all the tasks in the task queue
     while not tasks.empty():
         proc_input = await tasks.get()
@@ -164,5 +166,5 @@ async def run():
         tasks.task_done()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(run())
